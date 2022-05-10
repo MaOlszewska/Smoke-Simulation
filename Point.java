@@ -19,8 +19,16 @@ public class Point {
         density, 
         oldDensity,
 
+        // Current and previous bouyancy
+        bouyancy,
+        oldBouyancy,
+
         // temperature
         temperature;
+
+    boolean 
+        isBarrier,
+        isSource;
     
     ArrayList<Point> neighbours = new  ArrayList<>();
 
@@ -36,10 +44,16 @@ public class Point {
         this.oldYVel = 0;
         this.oldZVel = 0;
         
-        this.density = 0;
-        this.oldDensity = 0;
+        this.density = 0.0f;
+        this.oldDensity = 0.0f;
+
+        this.bouyancy = 0;
+        this.oldBouyancy = 0;
         
         this.temperature = temperature;
+
+        this.isSource = false;
+        this.isBarrier = false;
     }
 
     // ===================================================
@@ -47,6 +61,22 @@ public class Point {
     // ===================================================
     public void addNei(Point newNei) {
         this.neighbours.add(newNei);
+    }
+
+    public void newBouyancy(float boy) {
+        this.oldBouyancy = this.bouyancy;
+        this.bouyancy = boy;
+    }
+
+    public void setSource(float density) {
+        this.isSource = true;
+        this.isBarrier = false;
+        this.density = density;
+    }
+
+    public void setBarrier() {
+        this.isBarrier = true;
+        this.isSource = false;
     }
 
 

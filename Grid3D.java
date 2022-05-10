@@ -7,7 +7,9 @@ public class Grid3D {
     Point [][][] grid; 
 
     // initial temperature of the room
-    float initTemperature; 
+    float 
+        initTemperature,
+        sourceDensity; 
 
     // [x_len, y_len, z_len]
     int [] sizes;
@@ -25,8 +27,13 @@ public class Grid3D {
     // ===================================================
     // INIT METHODS
     // ===================================================
-    public Grid3D(int x, int y, int z, float initTemperature) {
+    public Grid3D(int x, int y, int z, float initTemperature, float sourceDensity) {
         this.initTemperature = initTemperature;
+        this.sourceDensity = sourceDensity;
+        this.sizes = new int [3];
+        this.sizes[0] = x;
+        this.sizes[1] = y;
+        this.sizes[2] = z;
         initialize(x, y, z);
     }
 
@@ -46,12 +53,20 @@ public class Grid3D {
     public void initialize(int xSize, int ySize, int zSize) {
         // Create empty grid
         this.grid = new Point [xSize][ySize][zSize];
-
         // Create Points in grid
         for(int x = 0; x < xSize; x++)
             for(int y = 0; y < ySize; y++)
                 for(int z = 0; z < zSize; z++) {
                     this.grid[x][y][z] = new Point(this.initTemperature);
+                    // System.out.print(this.grid[x][y][z].density);
+                    if(
+                        x == 0          ||
+                        y == 0          ||
+                        z == 0          ||
+                        x == xSize-1    ||
+                        y == ySize-1    ||
+                        z == zSize-1
+                    ) this.grid[x][y][z].setBarrier();
                 }
 
         // Add neighbours for each Point
