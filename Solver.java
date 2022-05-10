@@ -7,7 +7,7 @@ public class Solver {
     public float initRoomTemperature;
     public String cacheName = "cache.txt";
     public float vorticity = 0.1f;
-    public float sourceDensity = 1000f;
+    public float sourceDensity = 100f;
     public int frameRange = 4;
     int fps;
     public Solver(int x, int y, int z, float temperature, int fps, int frameRange) {
@@ -33,7 +33,7 @@ public class Solver {
         for( ; frame < frameRange; frame++) {
             diffuse();
             // place to save or display function to be able to see results
-            System.out.println(grid.grid[2][2][2].density);
+            System.out.println(grid.grid[1][2][2].density);
         }
     }
 
@@ -127,7 +127,7 @@ public class Solver {
                         if(nei.oldDensity <= grid.grid[x][y][z].oldDensity && !grid.grid[x][y][z].isBarrier) inCount.add(nei);
                     }
                     if(inCount.size() == 0) continue;
-                    float summaryDiff = 0;
+                    float summaryDiff = 0.0f;
                     float [] ratios = new float[inCount.size()];
                     for(int i = 0; i < inCount.size(); i++) ratios[i] = 0;
                     for (Point nei : inCount) {
@@ -140,7 +140,7 @@ public class Solver {
                     for (Point nei : inCount) {
                         nei.density += this.vorticity * ratios[inCount.indexOf(nei)] * grid.grid[x][y][z].oldDensity / this.fps;
                     }
-                    grid.grid[x][y][z].density -= summaryDiff * this.vorticity * grid.grid[x][y][z].oldDensity / this.fps;
+                    grid.grid[x][y][z].density -= this.vorticity * grid.grid[x][y][z].oldDensity / this.fps;
                 }
             
     }
