@@ -1,13 +1,25 @@
 import java.util.ArrayList;
 
-public class Solver {
+// import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.ComponentEvent;
+// import java.awt.Insets;
+// import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JComponent;
+// import javax.swing.event.MouseInputListener;
+import javax.swing.event.MouseInputListener;
+
+public class Solver extends JComponent implements MouseInputListener, ComponentListener{
     public Grid3D grid;
     public int frame;
     public int [] sizes = new int [3];
     public float initRoomTemperature;
     public String cacheName = "cache.txt";
     public float vorticity = 0.1f;
-    public float sourceDensity = 100f;
+    public float sourceDensity = 10000f;
     public int frameRange = 4;
     int fps;
     public Solver(int x, int y, int z, float temperature, int fps, int frameRange) {
@@ -31,10 +43,16 @@ public class Solver {
 
     public void solveSimulation() {
         for( ; frame < frameRange; frame++) {
-            diffuse();
+            iteration();
             // place to save or display function to be able to see results
-            System.out.println(grid.grid[1][2][2].density);
+            System.out.println(grid.grid[1][2][2].density + ", " + grid.grid[10][10][10].density + ", " + grid.grid[1][1][1].density);
         }
+    }
+
+    public void iteration() {
+        diffuse();
+        System.out.println("bbbbbb");
+        grid.repaint();
     }
 
     // Adds a spherical source of smoke to the grid
@@ -143,5 +161,76 @@ public class Solver {
                     grid.grid[x][y][z].density -= this.vorticity * grid.grid[x][y][z].oldDensity / this.fps;
                 }
             
+    }
+    @Override
+    protected void paintComponent(Graphics g) {
+        System.out.println("aaa");
+        grid.update(g);
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void componentResized(ComponentEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void componentMoved(ComponentEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void componentShown(ComponentEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void componentHidden(ComponentEvent e) {
+        // TODO Auto-generated method stub
+        
     }
 }
