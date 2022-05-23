@@ -7,6 +7,7 @@ import java.awt.event.ComponentEvent;
 // import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
 import javax.swing.JComponent;
 // import javax.swing.event.MouseInputListener;
@@ -19,16 +20,22 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     public float initRoomTemperature;
     public String cacheName = "cache.txt";
     public float vorticity = 0.1f;
+    public float windInfluence = 1.05f;
     public float sourceDensity = 10000f;
     public int frameRange = 4;
     int fps;
-    public Solver(int x, int y, int z, float temperature, int fps, int frameRange) {
+    public float [] wind = new float[3];
+
+    public Solver(int x, int y, int z, float temperature, int fps, int frameRange, float w1, float w2, float w3) {
         sizes[0] = x;
         sizes[1] = y;
         sizes[2] = z;
         this.frameRange = frameRange;
         initRoomTemperature = temperature;
         this.fps = fps;
+        wind[0] = w1;
+        wind[1] = w2;
+        wind[2] = w3;
         reset();
     }
 
@@ -141,21 +148,73 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                 for(int z = 0; z < sizes[2]; z++) {
                     if(grid.grid[x][y][z].isBarrier) continue;
                     ArrayList<Point> inCount = new ArrayList<>();
-                    for (Point nei : grid.grid[x][y][z].neighbours) {
-                        if(nei.oldDensity <= grid.grid[x][y][z].oldDensity && !grid.grid[x][y][z].isBarrier) inCount.add(nei);
-                    }
+                    inCount.addAll(grid.grid[x][y][z].neighbours);
+//                    System.out.println(inCount.size() == 6);
                     if(inCount.size() == 0) continue;
                     float summaryDiff = 0.0f;
                     float [] ratios = new float[inCount.size()];
                     for(int i = 0; i < inCount.size(); i++) ratios[i] = 0;
                     for (Point nei : inCount) {
-                        summaryDiff += (grid.grid[x][y][z].oldDensity - nei.oldDensity);
+                        if(nei.oldDensity <= grid.grid[x][y][z].oldDensity && !grid.grid[x][y][z].isBarrier) {
+                            summaryDiff += (grid.grid[x][y][z].oldDensity - nei.oldDensity);
+                        }
                     }
                     if(summaryDiff == 0) continue;
                     for(int i = 0; i < inCount.size(); i++) {
-                        ratios[i] = (grid.grid[x][y][z].oldDensity - inCount.get(i).oldDensity) / summaryDiff;
+                        if(inCount.get(i).oldDensity <= grid.grid[x][y][z].oldDensity && !grid.grid[x][y][z].isBarrier) {
+                            ratios[i] = (grid.grid[x][y][z].oldDensity - inCount.get(i).oldDensity) / summaryDiff;
+                        }
                     }
+
+
+
+                    for ( int i = 0; i < wind.length; i++){
+                        if (wind[i] < 0.0f){
+//                            System.out.println("Wieje na minus");
+                            if (inCount.get(5-i).isBarrier) {
+//                                System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] + windInfluence * wind[i]));
+                                ratios[5 - i] += windInfluence * wind[i];
+                                if (!inCount.get(2-i).isBarrier) {
+//                                    System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] - windInfluence * wind[i]));
+                                    ratios[2 - i] -= windInfluence * wind[i];
+                                }
+                            }
+                        }
+                        else {
+//                            System.out.println("Wieje na plus!");
+                            if (!inCount.get(2-i).isBarrier) {
+//                                System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] + windInfluence * wind[i]));
+                                ratios[2 - i] += windInfluence * wind[i];
+                                if (!inCount.get(5-i).isBarrier) {
+//                                    System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] - windInfluence * wind[i]));
+                                    ratios[5 - i] -= windInfluence * wind[i];
+                                }
+                            }
+                        }
+                    }
+
+//
+                    float sumRatios = 0.0f;
+                    for (float ratio : ratios){
+                        sumRatios += ratio;
+                    }
+//                    System.out.println(sumRatios);
+                    if (sumRatios <= 0.0f) continue;
+                    for (int i = 0; i < 6; i++){
+                        ratios[i] = ratios[i] / sumRatios;
+                    }
+                    sumRatios = 0.0f;
+                    for (float ratio : ratios){
+                        sumRatios += ratio;
+                    }
+
+                    if (sumRatios > 1.0f){
+                        System.out.println(sumRatios);
+                    }
+
+
                     for (Point nei : inCount) {
+//                        if(nei.oldDensity <= grid.grid[x][y][z].oldDensity && !nei.isBarrier)
                         nei.density += this.vorticity * ratios[inCount.indexOf(nei)] * grid.grid[x][y][z].oldDensity / this.fps;
                     }
                     grid.grid[x][y][z].density -= this.vorticity * grid.grid[x][y][z].oldDensity / this.fps;

@@ -118,7 +118,7 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
                     g.setColor(new Color(100,0 ,0, 255));
                 }
                 else {
-                int val = Math.max((int)(255 - dens/10), 0);
+                int val = Math.max(Math.min((int)(255 - dens/10), 255), 0);
                 
                 g.setColor(new Color(val, val, val, 255));
                 }
