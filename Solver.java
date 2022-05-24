@@ -169,28 +169,35 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
 
 
                     for ( int i = 0; i < wind.length; i++){
-                        if (wind[i] < 0.0f){
-//                            System.out.println("Wieje na minus");
-                            if (inCount.get(5-i).isBarrier) {
+                        if (!inCount.get(5-i).isBarrier) {
 //                                System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] + windInfluence * wind[i]));
-                                ratios[5 - i] += windInfluence * wind[i];
-                                if (!inCount.get(2-i).isBarrier) {
-//                                    System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] - windInfluence * wind[i]));
-                                    ratios[2 - i] -= windInfluence * wind[i];
-                                }
-                            }
+                                ratios[5 - i] -= windInfluence * wind[i];
                         }
-                        else {
-//                            System.out.println("Wieje na plus!");
-                            if (!inCount.get(2-i).isBarrier) {
+                        if (!inCount.get(2-i).isBarrier) {
 //                                System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] + windInfluence * wind[i]));
-                                ratios[2 - i] += windInfluence * wind[i];
-                                if (!inCount.get(5-i).isBarrier) {
-//                                    System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] - windInfluence * wind[i]));
-                                    ratios[5 - i] -= windInfluence * wind[i];
-                                }
-                            }
-                        }
+                                ratios[2 - i] += windInfluence * wind[i];}
+//                        if (wind[i] < 0.0f){
+////                            System.out.println("Wieje na minus");
+//                            if (!inCount.get(5-i).isBarrier) {
+////                                System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] + windInfluence * wind[i]));
+//                                ratios[5 - i] += windInfluence * wind[i];
+//                                if (!inCount.get(2-i).isBarrier) {
+////                                    System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] - windInfluence * wind[i]));
+//                                    ratios[2 - i] -= windInfluence * wind[i];
+//                                }
+//                            }
+//                        }
+//                        else {
+////                            System.out.println("Wieje na plus!");
+//                            if (!inCount.get(2-i).isBarrier) {
+////                                System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] + windInfluence * wind[i]));
+//                                ratios[2 - i] += windInfluence * wind[i];
+//                                if (!inCount.get(5-i).isBarrier) {
+////                                    System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] - windInfluence * wind[i]));
+//                                    ratios[5 - i] -= windInfluence * wind[i];
+//                                }
+//                            }
+//                        }
                     }
 
 //
@@ -207,10 +214,9 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                     for (float ratio : ratios){
                         sumRatios += ratio;
                     }
-
-                    if (sumRatios > 1.0f){
-                        System.out.println(sumRatios);
-                    }
+//                    if (sumRatios > 1.0f){
+//                        System.out.println(sumRatios);
+//                    }
 
 
                     for (Point nei : inCount) {
