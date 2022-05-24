@@ -27,6 +27,7 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
     int [] sizes;
 
     int level = 1;
+    int wall = 1;
 
     // options for neighbours (if in domain)
     static int  [][] options = { 
@@ -77,7 +78,7 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
 
     public void initialize(int xSize, int ySize, int zSize) {
         // Create empty grid
-        this.grid = new Point [xSize][ySize][zSize];
+        this.grid = new Point [xSize * 2 + 5][xSize * 2 + 5][xSize * 2 + 5];
         // Create Points in grid
         for(int x = 0; x < xSize; x++)
             for(int y = 0; y < ySize; y++)
@@ -111,11 +112,12 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
     //
     // ===================================================
     public void drawGrid(Graphics g) {
+
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++) {
                 float dens = grid[x][y][level].density;
                 if(grid[x][y][level].isBarrier) {
-                    g.setColor(new Color(100,0 ,0, 255));
+                    g.setColor(new Color(219,112,147, 255));
                 }
                 else {
                 int val = Math.max(Math.min((int)(255 - dens/10), 255), 0);
@@ -123,6 +125,19 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
                 g.setColor(new Color(val, val, val, 255));
                 }
                 g.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+            }
+
+        for(int x = 0; x < sizes[0]; x++)
+            for(int z = 0; z < sizes[2]; z++) {
+                float dens = grid[x][wall][z].density;
+                if(grid[x][wall][z].isBarrier) {
+                    g.setColor(new Color(219,112,147, 255));
+                }
+                else {
+                    int val = Math.max(Math.min((int)(255 - dens/10), 255), 0);
+                    g.setColor(new Color(val, val, val, 255));
+                }
+                g.fillRect((x + 2 + sizes[0]) * cellSize, (sizes[2] - z - 1) * cellSize, cellSize - 1, cellSize - 1);
             }
     }
 
@@ -178,6 +193,16 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
 
     public void down() {
         level = Math.max(0, level-1);
+        this.repaint();
+    }
+
+    public void forward(){
+        wall = Math.min(sizes[1] - 1, wall + 1);
+        this.repaint();
+    }
+
+    public void backward(){
+        wall = Math.max(0, wall - 1);
         this.repaint();
     }
 }

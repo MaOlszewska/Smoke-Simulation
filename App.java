@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 
 public class App extends JFrame{
     private static final long serialVersionUID = 1L;
@@ -12,9 +13,10 @@ public class App extends JFrame{
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         gof = new GUI(this, solver);
 		gof.initialize(this.getContentPane());
-
-        this.setSize(500, 600);
+        this.setSize(1200, 500);
 		this.setVisible(true);
+        this.setTitle("Smoke Simulation");
+        this.setBackground(Color.LIGHT_GRAY);
     }
 
     public static void main(String[] args) {
