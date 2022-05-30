@@ -20,11 +20,12 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     public float initRoomTemperature;
     public String cacheName = "cache.txt";
     public float vorticity = 0.1f;
-    public float windInfluence = 1.05f;
-    public float sourceDensity = 10000f;
+    public float windInfluence = 1000.5f;
+    public float sourceDensity = 5000f;
     public int frameRange = 4;
     int fps;
     public float [] wind = new float[3];
+    private boolean ifWind = false;
 
     public Solver(int x, int y, int z, float temperature, int fps, int frameRange, float w1, float w2, float w3) {
         sizes[0] = x;
@@ -35,7 +36,7 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
         this.fps = fps;
         wind[0] = w1;
         wind[1] = w2;
-        wind[2] = w3;
+        wind[2] = w3 + (Math.abs(w1) + Math.abs(w2));
         reset();
     }
 
@@ -45,7 +46,7 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     }
 
     public void clearCache() {
-        
+
     }
 
     public void solveSimulation() {
@@ -58,7 +59,8 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
 
     public void iteration() {
         diffuse();
-        System.out.println("bbbbbb");
+        if(ifWind) wind();
+        // System.out.println("bbbbbb");
         grid.repaint();
     }
 
@@ -73,11 +75,11 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
             for(int y = 1; y < sizes[1]-1; y++)
                 for(int z = 1; z < sizes[2]-1; z++) {
                     int dist = (int)(
-                        Math.sqrt(
-                            Math.pow(x - xs, 2) +
-                            Math.pow(y - ys, 2) +
-                            Math.pow(z - zs, 2)
-                        )
+                            Math.sqrt(
+                                    Math.pow(x - xs, 2) +
+                                            Math.pow(y - ys, 2) +
+                                            Math.pow(z - zs, 2)
+                            )
                     );
                     if(dist < r) grid.grid[x][y][z].setSource(this.sourceDensity);
                 }
@@ -87,16 +89,16 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     public void addBarrier(int x1, int y1, int z1, int x2, int y2, int z2) {
         // values should be x1 < x2, y1 < y2, z1 < z2 and in domain minus barriers
         // if incorrect values given return
-        if( 
-            x1 > x2             || 
-            y1 > y2             || 
-            z1 > z2             ||
-            x1 < 1              ||
-            y1 < 1              ||
-            z1 < 1              ||
-            x2 >= sizes[0]-1    ||
-            y2 >= sizes[1]-1    ||
-            z2 >= sizes[2]-1
+        if(
+                x1 > x2             ||
+                        y1 > y2             ||
+                        z1 > z2             ||
+                        x1 < 1              ||
+                        y1 < 1              ||
+                        z1 < 1              ||
+                        x2 >= sizes[0]-1    ||
+                        y2 >= sizes[1]-1    ||
+                        z2 >= sizes[2]-1
         ) return;
 
         for(int x = x1; x <= x2; x++)
@@ -114,7 +116,7 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++)
                 for(int z = 0; z < sizes[2]; z++)
-                    if(!grid.grid[x][y][z].isBarrier) 
+                    if(!grid.grid[x][y][z].isBarrier)
                         sumDensities += grid.grid[x][y][z].density;
                     else
                         countBarriers++;
@@ -128,6 +130,50 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                     grid.grid[x][y][z].newBouyancy(a * currDensity - b * (currDensity - avgDensity));
                 }
     }
+    public void wind() {
+        for(int x = 0; x < sizes[0]; x++)
+            for(int y = 0; y < sizes[1]; y++)
+                for(int z = 0; z < sizes[2]; z++) {
+                    if(grid.grid[x][y][z].isBarrier) continue;
+                    ArrayList<Point> inCount = new ArrayList<>();
+                    inCount.addAll(grid.grid[x][y][z].neighbours);
+                    if(inCount.size() == 0) continue;
+
+                    float sumWind = Math.abs(wind[0]) + Math.abs(wind[1]) + Math.abs(wind[2]);
+                    for ( int i = 0; i < wind.length; i++){
+                        if (wind[i] < 0.0f){
+                            if (!grid.grid[x][y][z].isBarrier) {
+                                float val = Math.min(Math.abs(windInfluence * wind[i]), grid.grid[x][y][z].oldDensity) / sumWind;
+                                if (!inCount.get(2-i).isBarrier){
+                                    grid.grid[x][y][z].density -= val;
+                                    inCount.get(2-i).density += val;
+                                }
+                            }
+                        }
+                        else {
+                            if (!grid.grid[x][y][z].isBarrier) {
+                                float val = Math.min(Math.abs(windInfluence * wind[i]), grid.grid[x][y][z].oldDensity) / sumWind;
+                                if (!inCount.get(5-i).isBarrier){
+                                    grid.grid[x][y][z].density -= val;
+                                    inCount.get(5-i).density += val;
+                                }
+                            }
+                        }
+                    }
+                    if (grid.grid[x][y][z].density < 0.0f){
+                        System.out.println("Problem");
+                    }
+                }
+
+        for(int x = 0; x < sizes[0]; x++)
+            for(int y = 0; y < sizes[1]; y++)
+                for(int z = 0; z < sizes[2]; z++) {
+                    grid.grid[x][y][z].oldDensity = grid.grid[x][y][z].density;
+                }
+
+    }
+
+
     // calculates current density for each nei with lower density
     public void diffuse() {
         // copies current density of each point to oldDensity
@@ -149,7 +195,6 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                     if(grid.grid[x][y][z].isBarrier) continue;
                     ArrayList<Point> inCount = new ArrayList<>();
                     inCount.addAll(grid.grid[x][y][z].neighbours);
-//                    System.out.println(inCount.size() == 6);
                     if(inCount.size() == 0) continue;
                     float summaryDiff = 0.0f;
                     float [] ratios = new float[inCount.size()];
@@ -167,45 +212,10 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                     }
 
 
-
-                    for ( int i = 0; i < wind.length; i++){
-                        if (!inCount.get(5-i).isBarrier) {
-//                                System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] + windInfluence * wind[i]));
-                                ratios[5 - i] -= windInfluence * wind[i];
-                        }
-                        if (!inCount.get(2-i).isBarrier) {
-//                                System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] + windInfluence * wind[i]));
-                                ratios[2 - i] += windInfluence * wind[i];}
-//                        if (wind[i] < 0.0f){
-////                            System.out.println("Wieje na minus");
-//                            if (!inCount.get(5-i).isBarrier) {
-////                                System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] + windInfluence * wind[i]));
-//                                ratios[5 - i] += windInfluence * wind[i];
-//                                if (!inCount.get(2-i).isBarrier) {
-////                                    System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] - windInfluence * wind[i]));
-//                                    ratios[2 - i] -= windInfluence * wind[i];
-//                                }
-//                            }
-//                        }
-//                        else {
-////                            System.out.println("Wieje na plus!");
-//                            if (!inCount.get(2-i).isBarrier) {
-////                                System.out.println(ratios[2 - i] + "->" + (ratios[2 - i] + windInfluence * wind[i]));
-//                                ratios[2 - i] += windInfluence * wind[i];
-//                                if (!inCount.get(5-i).isBarrier) {
-////                                    System.out.println(ratios[5 - i] + "->" + (ratios[5 - i] - windInfluence * wind[i]));
-//                                    ratios[5 - i] -= windInfluence * wind[i];
-//                                }
-//                            }
-//                        }
-                    }
-
-//
                     float sumRatios = 0.0f;
                     for (float ratio : ratios){
                         sumRatios += ratio;
                     }
-//                    System.out.println(sumRatios);
                     if (sumRatios <= 0.0f) continue;
                     for (int i = 0; i < 6; i++){
                         ratios[i] = ratios[i] / sumRatios;
@@ -214,18 +224,18 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                     for (float ratio : ratios){
                         sumRatios += ratio;
                     }
-//                    if (sumRatios > 1.0f){
-//                        System.out.println(sumRatios);
-//                    }
-
-
                     for (Point nei : inCount) {
-//                        if(nei.oldDensity <= grid.grid[x][y][z].oldDensity && !nei.isBarrier)
                         nei.density += this.vorticity * ratios[inCount.indexOf(nei)] * grid.grid[x][y][z].oldDensity / this.fps;
                     }
                     grid.grid[x][y][z].density -= this.vorticity * grid.grid[x][y][z].oldDensity / this.fps;
                 }
-            
+
+        for(int x = 0; x < sizes[0]; x++)
+            for(int y = 0; y < sizes[1]; y++)
+                for(int z = 0; z < sizes[2]; z++) {
+                    grid.grid[x][y][z].oldDensity = grid.grid[x][y][z].density;
+                }
+
     }
     @Override
     protected void paintComponent(Graphics g) {
@@ -236,66 +246,69 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     @Override
     public void mouseClicked(MouseEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void componentResized(ComponentEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void componentMoved(ComponentEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void componentShown(ComponentEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void componentHidden(ComponentEvent e) {
         // TODO Auto-generated method stub
-        
+
+    }
+    public void setWind(){
+        ifWind = !ifWind;
     }
 }

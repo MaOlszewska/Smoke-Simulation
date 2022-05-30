@@ -7,6 +7,7 @@ public class App extends JFrame{
     public App() {
         Solver solver = new Solver(40, 40, 40, 36, 1, 100, -1, -2, 0);
         solver.addSource(6, 3, 2, 4);
+        solver.addSource(10,10,1,4);
         solver.addBarrier(4, 4, 1, 5, 5, 5);
         solver.addBarrier(7, 7, 1, 7, 15, 5);
         solver.addBarrier(7, 7, 1, 15, 7, 5);

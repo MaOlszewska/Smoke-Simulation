@@ -27,7 +27,7 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
     int [] sizes;
 
     int level = 1;
-    int wall = 1;
+    int wall = 10;
 
     // options for neighbours (if in domain)
     static int  [][] options = { 
@@ -205,4 +205,6 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
         wall = Math.max(0, wall - 1);
         this.repaint();
     }
+
+
 }

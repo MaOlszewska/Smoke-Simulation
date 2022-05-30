@@ -18,6 +18,10 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
     private JButton up;
     private JButton down;
 
+    private JButton wind;
+
+    private JButton startSimulation;
+
     private JLabel labelLeft;
 
     private JLabel labelRight;
@@ -45,6 +49,12 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
         JPanel buttonPanelLeft = new JPanel();
         JPanel buttonPanelRight = new JPanel();
         JPanel buttonPanelDown = new JPanel();
+
+        wind = new JButton("Wind");
+        wind.setActionCommand("Wind");
+        wind.setToolTipText("Starts wind");
+        wind.addActionListener(this);
+
 
         start = new JButton("Start");
         start.setActionCommand("Start");
@@ -77,12 +87,14 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
         up.setBackground(Color.PINK);
         forward.setBackground(Color.PINK);
         backward.setBackground(Color.PINK);
+        wind.setBackground(Color.PINK);
 
         start.setFont(new Font("Serif", Font.PLAIN, 14));
         down.setFont(new Font("Serif", Font.PLAIN, 14));
         up.setFont(new Font("Serif", Font.PLAIN, 14));
         forward.setFont(new Font("Serif", Font.PLAIN, 14));
         backward.setFont(new Font("Serif", Font.PLAIN, 14));
+        wind.setFont(new Font("Serif", Font.PLAIN, 14));
 
 
         buttonPanelLeft.add(start);
@@ -90,11 +102,12 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
         buttonPanelLeft.add(down);
 
         buttonPanelDown.add(start);
-
+        buttonPanelDown.add(wind);
         buttonPanelRight.add(forward);
         buttonPanelRight.add(backward);
         grid3d = solver.grid;
         // nGrid = new Grid3D(10, 10, 10, 20, 1000);
+
 
         JPanel labels = new JPanel();
         labels.setLayout(new GridLayout(1,2));
@@ -113,35 +126,37 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-		if (e.getSource().equals(timer)) {
+        String command = e.getActionCommand();
+        if (e.getSource().equals(timer)) {
             iterNum++;
             frame.setTitle("Smoke symulation: " + Integer.toString(iterNum));
             solver.iteration();
             // grid3d.repaint();
-            
+
         } else {
-            String command = e.getActionCommand();
-			if (command.equals("Start")) {
-				if (!running) {
-					timer.start();
-					start.setText("Pause");
-				} else {
+
+            if (command.equals("Start")) {
+                if (!running) {
+                    timer.start();
+                    start.setText("Pause");
+                } else {
                     timer.stop();
-					start.setText("Start");
-				}
+                    start.setText("Start");
+                }
                 running = !running;
             } else if (command.equals("Up")) {
                 grid3d.up();
             } else if (command.equals("Down")) {
                 grid3d.down();
-            } else if (command.equals("Forward")){
+            } else if (command.equals("Forward")) {
                 grid3d.forward();
-            }else if (command.equals("Backward")){
+            } else if (command.equals("Backward")) {
                 grid3d.backward();
+            } else if (command.equals("Wind")) {
+                solver.setWind();
             }
         }
     }
-
     public void stateChanged(ChangeEvent e) {
         timer.setDelay(100);
 	} 
