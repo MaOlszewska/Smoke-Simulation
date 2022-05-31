@@ -19,25 +19,30 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     public int [] sizes = new int [3];
     public float initRoomTemperature;
     public String cacheName = "cache.txt";
-    public float vorticity = 0.1f;
+    public float vorticity = 0.2f;
     public float windInfluence = 0.01f;
     public float sourceDensity = 5000f;
     public int frameRange = 4;
+    public int substeps = 5;
+    public int sourcesUntilFrame;
     int fps;
     public float [] wind = new float[3];
     private boolean ifWind = false;
 
-    public Solver(int x, int y, int z, float temperature, int fps, int frameRange, float w1, float w2, float w3) {
+    public Solver(int x, int y, int z, float temperature, int fps, int frameRange, float w1, float w2, float w3, int substeps, int killSourcesAt) {
         sizes[0] = x;
         sizes[1] = y;
         sizes[2] = z;
         this.frameRange = frameRange;
         initRoomTemperature = temperature;
         this.fps = fps;
+        this.substeps = substeps;
+        this.sourcesUntilFrame = killSourcesAt;
         wind[0] = w1;
         wind[1] = w2;
         wind[2] = w3;
         wind[2]++;
+        frame = 0;
         reset();
     }
 
@@ -59,8 +64,9 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     }
 
     public void iteration() {
-        int substeps = 5; // 1 means no substeps
-        int solverVersion = 1; 
+        frame++;
+        // int substeps = 15; // 1 means no substeps
+        int solverVersion = 2; 
             for(int i = 0; i < substeps; i++) {
             
             if(solverVersion == 1) {
@@ -73,7 +79,8 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                 // diffuse3();
                 // if(ifWind) wind3();
             }
-            refuelSources();
+            if(frame < sourcesUntilFrame) 
+                refuelSources();
         }
         
         // System.out.println("bbbbbb");
@@ -225,10 +232,10 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     private void updateDiffDensities(float [] ratios, Point p, float summaryDiff) {
         for(int i = 0; i < 6; i++) {
             if(!p.neighbours.get(i).isBarrier) {
-                p.neighbours.get(i).density += ratios[i] * vorticity;
+                p.neighbours.get(i).density += ratios[i] * vorticity / substeps;
             }
         }
-        p.density += summaryDiff * vorticity;
+        p.density += summaryDiff * vorticity / substeps;
     }
 
     public void diffuse2() {
@@ -287,9 +294,9 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
 
     private void updateWindDensities(float [] ratios, float summaryDiff, Point p) {
         for(int i = 0; i < 6; i++) {
-            p.neighbours.get(i).density += ratios[i] * windInfluence;
+            p.neighbours.get(i).density += ratios[i] * windInfluence / substeps;
         }
-        p.density += summaryDiff * windInfluence;
+        p.density += summaryDiff * windInfluence / substeps;
     }
 
     public void wind2() {

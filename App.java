@@ -24,16 +24,16 @@ public class App extends JFrame{
             in Solver.java => iteration() method you can find variable 'version' which can change solver algorithm to previous version of implementation by asigning 1 to it. 
             NOT RECOMMENDED (more visible bugs)
         */
-        Solver solver = new Solver(40, 40, 40, 36, 1, 100, 1, 2, 0);
+        Solver solver = new Solver(40, 40, 40, 36, 1, 100, 1, 2, 0, 4, 150);
         solver.addSource(6, 3, 2, 4);
         solver.addSource(10,10,1,4);
 
 
 
         solver.addBarrier(4, 4, 1, 5, 5, 5);
-        solver.addBarrier(7, 7, 1, 7, 15, 5);
-        solver.addBarrier(15, 7, 1, 15, 18, 5);
-        solver.addBarrier(4, 4, 5, 15, 15, 5);
+        // solver.addBarrier(7, 7, 1, 7, 15, 5);
+        // solver.addBarrier(15, 7, 1, 15, 18, 5);
+        // solver.addBarrier(4, 4, 5, 15, 15, 5);
         solver.addBarrier(7, 7, 1, 15, 7, 5);
 
 
