@@ -20,7 +20,7 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     public float initRoomTemperature;
     public String cacheName = "cache.txt";
     public float vorticity = 0.1f;
-    public float windInfluence = 1000.5f;
+    public float windInfluence = 0.01f;
     public float sourceDensity = 5000f;
     public int frameRange = 4;
     int fps;
@@ -36,7 +36,8 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
         this.fps = fps;
         wind[0] = w1;
         wind[1] = w2;
-        wind[2] = w3 + (Math.abs(w1) + Math.abs(w2));
+        wind[2] = w3;
+        wind[2]++;
         reset();
     }
 
@@ -58,8 +59,23 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     }
 
     public void iteration() {
-        diffuse();
-        if(ifWind) wind();
+        int substeps = 5; // 1 means no substeps
+        int solverVersion = 1; 
+            for(int i = 0; i < substeps; i++) {
+            
+            if(solverVersion == 1) {
+                diffuse1();
+                if(ifWind) wind1();
+            } else if(solverVersion == 2) {
+                diffuse2();
+                if(ifWind) wind2();
+            } else if(solverVersion == 3) {
+                // diffuse3();
+                // if(ifWind) wind3();
+            }
+            refuelSources();
+        }
+        
         // System.out.println("bbbbbb");
         grid.repaint();
     }
@@ -107,30 +123,38 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                     grid.grid[x][y][z].setBarrier();
     }
 
-    // Calculates density for next frame and sets it for each Point in Grid3D
-    public void bouyancy() {
-        final float a = 0.000625f;
-        final float b = 0.025f;
-        float sumDensities = 0;
-        int countBarriers = 0;
+    private void refuelSources() {
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++)
-                for(int z = 0; z < sizes[2]; z++)
-                    if(!grid.grid[x][y][z].isBarrier)
-                        sumDensities += grid.grid[x][y][z].density;
-                    else
-                        countBarriers++;
-        float avgDensity = sumDensities / (sizes[0] * sizes[1] * sizes[2] - countBarriers);
-
-        for(int x = 0; x < sizes[0]; x++)
-            for(int y = 0; y < sizes[1]; y++)
-                for(int z = 0; z < sizes[2]; z++) {
-                    if(grid.grid[x][y][z].isBarrier) continue;
-                    float currDensity = grid.grid[x][y][z].density;
-                    grid.grid[x][y][z].newBouyancy(a * currDensity - b * (currDensity - avgDensity));
-                }
+                for(int z = 0; z < sizes[2]; z++) 
+                    if(!grid.grid[x][y][z].isBarrier && grid.grid[x][y][z].isSource) 
+                        grid.grid[x][y][z].density = sourceDensity;
     }
-    public void wind() {
+
+    // Calculates density for next frame and sets it for each Point in Grid3D
+    // public void bouyancy() {
+    //     final float a = 0.000625f;
+    //     final float b = 0.025f;
+    //     float sumDensities = 0;
+    //     int countBarriers = 0;
+    //     for(int x = 0; x < sizes[0]; x++)
+    //         for(int y = 0; y < sizes[1]; y++)
+    //             for(int z = 0; z < sizes[2]; z++)
+    //                 if(!grid.grid[x][y][z].isBarrier)
+    //                     sumDensities += grid.grid[x][y][z].density;
+    //                 else
+    //                     countBarriers++;
+    //     float avgDensity = sumDensities / (sizes[0] * sizes[1] * sizes[2] - countBarriers);
+
+    //     for(int x = 0; x < sizes[0]; x++)
+    //         for(int y = 0; y < sizes[1]; y++)
+    //             for(int z = 0; z < sizes[2]; z++) {
+    //                 if(grid.grid[x][y][z].isBarrier) continue;
+    //                 float currDensity = grid.grid[x][y][z].density;
+    //                 grid.grid[x][y][z].newBouyancy(a * currDensity - b * (currDensity - avgDensity));
+    //             }
+    // }
+    public void wind1() {
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++)
                 for(int z = 0; z < sizes[2]; z++) {
@@ -173,9 +197,149 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
 
     }
 
+    private void rewriteDensities() {
+        for(int x = 0; x < sizes[0]; x++)
+            for(int y = 0; y < sizes[1]; y++)
+                for(int z = 0; z < sizes[2]; z++) 
+                    grid.grid[x][y][z].oldDensity = grid.grid[x][y][z].density;
+    }
+
+    private float calcSummaryDiff(Point p) {
+        float sum = 0.0f;
+        for (Point nei : p.neighbours) {
+            if(!nei.isBarrier) {
+                sum += nei.oldDensity - p.oldDensity;
+            }
+        }
+        return sum;
+    }
+
+    private void calcDiffRatios(float [] ratios, int notBarriers, Point p) {
+        for(int i = 0; i < 6; i++) {
+            if(!p.neighbours.get(i).isBarrier) {
+                ratios[i] = (p.oldDensity - p.neighbours.get(i).oldDensity) / notBarriers;
+            }
+        }
+    }
+
+    private void updateDiffDensities(float [] ratios, Point p, float summaryDiff) {
+        for(int i = 0; i < 6; i++) {
+            if(!p.neighbours.get(i).isBarrier) {
+                p.neighbours.get(i).density += ratios[i] * vorticity;
+            }
+        }
+        p.density += summaryDiff * vorticity;
+    }
+
+    public void diffuse2() {
+        rewriteDensities();
+        
+        for(int x = 1; x < sizes[0] - 1; x++)
+            for(int y = 1; y < sizes[1] - 1; y++)
+                for(int z = 1; z < sizes[2] - 1; z++) {
+                    if(grid.grid[x][y][z].isBarrier) continue;
+                    boolean barriersOnly = true;
+                    int notBarriers = 0;
+                    boolean anyNotZero = true;
+                    for (Point nei : grid.grid[x][y][z].neighbours) {
+                        if(!nei.isBarrier) {
+                            barriersOnly = false;
+                            notBarriers++;
+                            if(nei.oldDensity != 0.0f)
+                                anyNotZero = true;
+                        }
+                    }
+                    if(barriersOnly || !anyNotZero && grid.grid[x][y][z].oldDensity == 0.0f) continue;
+                    float [] ratios = new float[6];
+                    for(int i = 0; i < 6; i++) ratios[i] = 0;
+
+                    float summaryDiff = calcSummaryDiff(grid.grid[x][y][z]);
+
+                    calcDiffRatios(ratios, notBarriers, grid.grid[x][y][z]);
+
+                    updateDiffDensities(ratios, grid.grid[x][y][z], summaryDiff);
+                }
+    }
+
+    private float calcWindRatiosAndSumDiff(float [] ratios, Point p, float windPower) {
+        float sum = 0;
+        float divider = 0; // maybe changeable (sum can't let exceed amount of density that point has)
+        for(int i = 0; i < 6; i++)
+            if(ratios[i] > 0)
+                divider++;
+
+        for(int i = 0; i < 6; i++) {
+            if(ratios[i] == 0.0f) // Skip for ratio == 0 and barriers (included in ratio == 0)
+                continue;
+
+            if(ratios[i] < 0) { // When neighbour gives to p
+                ratios[i] = ratios[i] * p.neighbours.get(i).oldDensity * windPower;
+                sum -= ratios[i];
+            }
+            if(ratios[i] > 0) { // When neighbour takes from p
+                
+                ratios[i] = ratios[i] * p.oldDensity / divider * windPower;
+                sum -= ratios[i];
+            }
+        }
+        return sum;
+    }
+
+    private void updateWindDensities(float [] ratios, float summaryDiff, Point p) {
+        for(int i = 0; i < 6; i++) {
+            p.neighbours.get(i).density += ratios[i] * windInfluence;
+        }
+        p.density += summaryDiff * windInfluence;
+    }
+
+    public void wind2() {
+        rewriteDensities();
+        float windPower;
+        windPower = (float) Math.sqrt(Math.pow(wind[0], 2) + Math.pow(wind[1], 2) + Math.pow(wind[2], 2));
+        // windPower = (float) (Math.abs(wind[0]) + Math.abs(wind[1]) + Math.abs(wind[2]));
+        for(int x = 1; x < sizes[0] - 1; x++)
+            for(int y = 1; y < sizes[1] - 1; y++)
+                for(int z = 1; z < sizes[2] - 1; z++) {
+
+                    if(grid.grid[x][y][z].isBarrier) continue;
+                    boolean barriersOnly = true;
+                    // int notBarriers = 0;
+                    boolean anyNotZero = true;
+                    for (Point nei : grid.grid[x][y][z].neighbours) {
+                        if(!nei.isBarrier) {
+                            barriersOnly = false;
+                            // notBarriers++;
+                            if(nei.oldDensity != 0.0f)
+                                anyNotZero = true;
+                        }
+                    }
+                    if(barriersOnly || !anyNotZero && grid.grid[x][y][z].oldDensity == 0.0f) continue;
+
+                    // float summaryDiff = 0.0f;
+                    Point p = grid.grid[x][y][z];
+                    float [] ratios = new float[6];
+                    for(int i = 0; i < 6; i++) ratios[i] = 0;
+                    int swaper = 1;
+                    for(int w = 0; w < 3; w++) {
+                        if(!p.neighbours.get(2-w).isBarrier) {
+                            // summaryDiff += wind[w] * swaper;
+                            ratios[2-w] = +wind[w] * swaper;
+                        }
+                        if(!p.neighbours.get(5-w).isBarrier) {
+                            // summaryDiff -= wind[w] * swaper;
+                            ratios[5-w] = -wind[w] * swaper;
+                        }
+                    }
+
+                    float summaryDiff = calcWindRatiosAndSumDiff(ratios, p, windPower);
+
+                    updateWindDensities(ratios, summaryDiff, p);
+                }
+    }
+
 
     // calculates current density for each nei with lower density
-    public void diffuse() {
+    public void diffuse1() {
         // copies current density of each point to oldDensity
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++)

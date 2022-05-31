@@ -112,7 +112,7 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
     //
     // ===================================================
     public void drawGrid(Graphics g) {
-
+        int gapSize = 0;
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++) {
                 float dens = grid[x][y][level].density;
@@ -120,11 +120,11 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
                     g.setColor(new Color(219,112,147, 255));
                 }
                 else {
-                int val = Math.max(Math.min((int)(255 - dens/10), 255), 0);
+                int val = Math.max(Math.min((int)(255 - dens/5), 255), 0);
                 
                 g.setColor(new Color(val, val, val, 255));
                 }
-                g.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                g.fillRect(x * cellSize, y * cellSize, cellSize - gapSize, cellSize - gapSize);
             }
 
         for(int x = 0; x < sizes[0]; x++)
@@ -137,7 +137,7 @@ public class Grid3D extends JComponent implements MouseInputListener, ComponentL
                     int val = Math.max(Math.min((int)(255 - dens/10), 255), 0);
                     g.setColor(new Color(val, val, val, 255));
                 }
-                g.fillRect((x + 2 + sizes[0]) * cellSize, (sizes[2] - z - 1) * cellSize, cellSize - 1, cellSize - 1);
+                g.fillRect((x + 2 + sizes[0]) * cellSize, (sizes[2] - z - 1) * cellSize, cellSize - gapSize, cellSize - gapSize);
             }
     }
 
