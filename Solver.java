@@ -1,16 +1,9 @@
 import java.util.ArrayList;
-
-// import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.ComponentEvent;
-// import java.awt.Insets;
-// import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
-
 import javax.swing.JComponent;
-// import javax.swing.event.MouseInputListener;
 import javax.swing.event.MouseInputListener;
 
 public class Solver extends JComponent implements MouseInputListener, ComponentListener{
@@ -66,9 +59,9 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     public void iteration() {
         frame++;
         // int substeps = 15; // 1 means no substeps
-        int solverVersion = 2; 
-            for(int i = 0; i < substeps; i++) {
-            
+        int solverVersion = 2;
+        for(int i = 0; i < substeps; i++) {
+
             if(solverVersion == 1) {
                 diffuse1();
                 if(ifWind) wind1();
@@ -79,10 +72,10 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                 // diffuse3();
                 // if(ifWind) wind3();
             }
-            if(frame < sourcesUntilFrame) 
+            if(frame < sourcesUntilFrame)
                 refuelSources();
         }
-        
+
         // System.out.println("bbbbbb");
         grid.repaint();
     }
@@ -133,34 +126,10 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     private void refuelSources() {
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++)
-                for(int z = 0; z < sizes[2]; z++) 
-                    if(!grid.grid[x][y][z].isBarrier && grid.grid[x][y][z].isSource) 
+                for(int z = 0; z < sizes[2]; z++)
+                    if(!grid.grid[x][y][z].isBarrier && grid.grid[x][y][z].isSource)
                         grid.grid[x][y][z].density = sourceDensity;
     }
-
-    // Calculates density for next frame and sets it for each Point in Grid3D
-    // public void bouyancy() {
-    //     final float a = 0.000625f;
-    //     final float b = 0.025f;
-    //     float sumDensities = 0;
-    //     int countBarriers = 0;
-    //     for(int x = 0; x < sizes[0]; x++)
-    //         for(int y = 0; y < sizes[1]; y++)
-    //             for(int z = 0; z < sizes[2]; z++)
-    //                 if(!grid.grid[x][y][z].isBarrier)
-    //                     sumDensities += grid.grid[x][y][z].density;
-    //                 else
-    //                     countBarriers++;
-    //     float avgDensity = sumDensities / (sizes[0] * sizes[1] * sizes[2] - countBarriers);
-
-    //     for(int x = 0; x < sizes[0]; x++)
-    //         for(int y = 0; y < sizes[1]; y++)
-    //             for(int z = 0; z < sizes[2]; z++) {
-    //                 if(grid.grid[x][y][z].isBarrier) continue;
-    //                 float currDensity = grid.grid[x][y][z].density;
-    //                 grid.grid[x][y][z].newBouyancy(a * currDensity - b * (currDensity - avgDensity));
-    //             }
-    // }
     public void wind1() {
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++)
@@ -207,7 +176,7 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     private void rewriteDensities() {
         for(int x = 0; x < sizes[0]; x++)
             for(int y = 0; y < sizes[1]; y++)
-                for(int z = 0; z < sizes[2]; z++) 
+                for(int z = 0; z < sizes[2]; z++)
                     grid.grid[x][y][z].oldDensity = grid.grid[x][y][z].density;
     }
 
@@ -240,7 +209,7 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
 
     public void diffuse2() {
         rewriteDensities();
-        
+
         for(int x = 1; x < sizes[0] - 1; x++)
             for(int y = 1; y < sizes[1] - 1; y++)
                 for(int z = 1; z < sizes[2] - 1; z++) {
@@ -284,7 +253,7 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                 sum -= ratios[i];
             }
             if(ratios[i] > 0) { // When neighbour takes from p
-                
+
                 ratios[i] = ratios[i] * p.oldDensity / divider * windPower;
                 sum -= ratios[i];
             }
@@ -339,7 +308,6 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                     }
 
                     float summaryDiff = calcWindRatiosAndSumDiff(ratios, p, windPower);
-
                     updateWindDensities(ratios, summaryDiff, p);
                 }
     }
@@ -382,7 +350,6 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
                         }
                     }
 
-
                     float sumRatios = 0.0f;
                     for (float ratio : ratios){
                         sumRatios += ratio;
@@ -410,7 +377,6 @@ public class Solver extends JComponent implements MouseInputListener, ComponentL
     }
     @Override
     protected void paintComponent(Graphics g) {
-        System.out.println("aaa");
         grid.update(g);
     }
 

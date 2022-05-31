@@ -1,9 +1,6 @@
 import java.util.ArrayList;
 
 public class Point {
-    // ===================================================
-    // VARIABLES
-    // ===================================================
     float 
         // Velocities
         xVel,
@@ -32,9 +29,6 @@ public class Point {
     
     ArrayList<Point> neighbours = new  ArrayList<>();
 
-    // ===================================================
-    // INIT METHODS
-    // ===================================================
     public Point(float temperature) {
         this.xVel = 0;
         this.yVel = 0;
@@ -56,9 +50,6 @@ public class Point {
         this.isBarrier = false;
     }
 
-    // ===================================================
-    // FUNCTIONAL METHODS
-    // ===================================================
     public void addNei(Point newNei) {
         this.neighbours.add(newNei);
     }
@@ -78,14 +69,4 @@ public class Point {
         this.isBarrier = true;
         this.isSource = false;
     }
-
-
-
-    // ===================================================
-    // COMPUTIONAL METHODS
-    // ===================================================
-
-
-
-
 }

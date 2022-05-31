@@ -3,25 +3,18 @@ import java.awt.*;
 
 public class App extends JFrame{
     private static final long serialVersionUID = 1L;
-	private GUI gof;
+    private GUI gof;
     public App() {
         /*
         MESSAGE FOR USERS/TESTERS:
-
             using too high values on wind result in crashing caused by lack of ceil cap value for wind and wind influence variables,
             unless you use values in range about (0, 3) for wind everything should work fine.
-
             In this simulator only way to enable higher wind speeds would be by making additional substeps between frames ( easy to add ).
-
             Wind meeting barriers on its way causes other wind vector to pump more energy into transition resulting in natural flow speeding up near walls.
-
             Vorticity should also be kept on lower values to prevent crashes caused by pumping more wind than there is available, also fixable by adding substeps.
-
-
         PS:
             substeps added XD (mention substep means repeating calculations a few times in every step = slows frames).
-
-            in Solver.java => iteration() method you can find variable 'version' which can change solver algorithm to previous version of implementation by asigning 1 to it. 
+            in Solver.java => iteration() method you can find variable 'version' which can change solver algorithm to previous version of implementation by asigning 1 to it.
             NOT RECOMMENDED (more visible bugs)
         */
         Solver solver = new Solver(40, 40, 40, 36, 1, 100, 1, 2, 0, 4, 150);
@@ -47,19 +40,19 @@ public class App extends JFrame{
         solver.addBarrier(31, 20, 1, 31, 25, 38);
         // back wall
         solver.addBarrier(25, 25, 1, 31, 25, 38);
-        
+
 
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         gof = new GUI(this, solver);
-		gof.initialize(this.getContentPane());
+        gof.initialize(this.getContentPane());
         this.setSize(1200, 500);
-		this.setVisible(true);
+        this.setVisible(true);
         this.setTitle("Smoke Simulation");
         this.setBackground(Color.LIGHT_GRAY);
     }
 
     public static void main(String[] args) {
-		new App();
-	}
+        new App();
+    }
 }
